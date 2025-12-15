@@ -6,25 +6,42 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Link as LinkIcon, Calendar } from '@phosphor-icons/react'
+import { MapPin, Link as LinkIcon, Calendar, PencilSimple } from '@phosphor-icons/react'
 
 interface EventDetailModalProps {
   event: MarketingEvent | null
   open: boolean
   onClose: () => void
+  onEdit: (event: MarketingEvent) => void
 }
 
-export function EventDetailModal({ event, open, onClose }: EventDetailModalProps) {
+export function EventDetailModal({ event, open, onClose, onEdit }: EventDetailModalProps) {
   if (!event) return null
   
   const solutionColor = SOLUTION_COLORS[event.solution]
+  
+  const handleEdit = () => {
+    onEdit(event)
+    onClose()
+  }
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-2xl pr-8">{event.title}</DialogTitle>
+          <div className="flex items-start justify-between gap-4">
+            <DialogTitle className="text-2xl pr-8">{event.title}</DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleEdit}
+              className="flex-shrink-0"
+            >
+              <PencilSimple size={20} />
+            </Button>
+          </div>
         </DialogHeader>
         
         <div className="space-y-4 mt-4">

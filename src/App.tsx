@@ -5,6 +5,7 @@ import { CalendarHeader } from './components/CalendarHeader'
 import { CalendarGrid } from './components/CalendarGrid'
 import { EventDetailModal } from './components/EventDetailModal'
 import { AddEventModal } from './components/AddEventModal'
+import { EditEventModal } from './components/EditEventModal'
 import { Toaster } from './components/ui/sonner'
 
 function App() {
@@ -18,6 +19,8 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState<MarketingEvent | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [eventToEdit, setEventToEdit] = useState<MarketingEvent | null>(null)
   
   const allEvents = events || []
   
@@ -70,6 +73,25 @@ function App() {
     setIsDetailModalOpen(true)
   }
   
+  const handleEditEvent = (event: MarketingEvent) => {
+    setEventToEdit(event)
+    setIsEditModalOpen(true)
+  }
+  
+  const handleUpdateEvent = (updatedEvent: MarketingEvent) => {
+    setEvents(current => 
+      (current || []).map(event => 
+        event.id === updatedEvent.id ? updatedEvent : event
+      )
+    )
+  }
+  
+  const handleDeleteEvent = (eventId: string) => {
+    setEvents(current => 
+      (current || []).filter(event => event.id !== eventId)
+    )
+  }
+  
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-[1600px] mx-auto space-y-6">
@@ -98,12 +120,24 @@ function App() {
           setIsDetailModalOpen(false)
           setSelectedEvent(null)
         }}
+        onEdit={handleEditEvent}
       />
       
       <AddEventModal
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddEvent}
+      />
+      
+      <EditEventModal
+        event={eventToEdit}
+        open={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setEventToEdit(null)
+        }}
+        onEdit={handleUpdateEvent}
+        onDelete={handleDeleteEvent}
       />
       
       <Toaster />
