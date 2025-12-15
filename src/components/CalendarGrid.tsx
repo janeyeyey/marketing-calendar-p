@@ -43,10 +43,8 @@ export function CalendarGrid({ year, month, events, onEventClick }: CalendarGrid
           <div key={weekIdx} className="grid grid-cols-7 divide-x divide-border">
             {week.map((day, dayIdx) => {
               const dayEvents = getEventsForDay(events, day)
-              const startingEvents = dayEvents.filter(event => isEventStartDay(event, day))
-              const continuingEvents = dayEvents.filter(event => !isEventStartDay(event, day))
               const isCurrentMonthDay = isCurrentMonth(day, month)
-              const totalEvents = startingEvents.length + continuingEvents.length
+              const totalEvents = dayEvents.length
               const minHeight = Math.max(totalEvents * 60 + 40, 100)
               
               return (
@@ -68,21 +66,23 @@ export function CalendarGrid({ year, month, events, onEventClick }: CalendarGrid
                   </div>
                   
                   <div className="space-y-1">
-                    {startingEvents.map((event) => (
-                      <EventCard
-                        key={event.id}
-                        event={event}
-                        onClick={() => onEventClick(event)}
-                      />
-                    ))}
-                    
-                    {continuingEvents.map((event) => (
-                      <EventContinuation
-                        key={`continuation-${event.id}`}
-                        event={event}
-                        onClick={() => onEventClick(event)}
-                      />
-                    ))}
+                    {dayEvents.map((event) => {
+                      const isStart = isEventStartDay(event, day)
+                      
+                      return isStart ? (
+                        <EventCard
+                          key={event.id}
+                          event={event}
+                          onClick={() => onEventClick(event)}
+                        />
+                      ) : (
+                        <EventContinuation
+                          key={`continuation-${event.id}`}
+                          event={event}
+                          onClick={() => onEventClick(event)}
+                        />
+                      )
+                    })}
                   </div>
                 </div>
               )

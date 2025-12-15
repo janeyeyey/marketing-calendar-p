@@ -48,11 +48,17 @@ export function parseDateKST(dateStr: string): Date {
 
 export function getEventsForDay(events: MarketingEvent[], date: Date): MarketingEvent[] {
   const dateStr = formatDate(date)
-  return events.filter(event => {
+  const dayEvents = events.filter(event => {
     const eventStartDate = parseDateKST(event.date)
     const eventEndDate = event.endDate ? parseDateKST(event.endDate) : eventStartDate
     
     return date >= eventStartDate && date <= eventEndDate
+  })
+  
+  return dayEvents.sort((a, b) => {
+    const aStart = parseDateKST(a.date)
+    const bStart = parseDateKST(b.date)
+    return aStart.getTime() - bStart.getTime()
   })
 }
 
