@@ -23,9 +23,11 @@ export function EventCard({ event, onClick }: EventCardProps) {
       >
         {event.title}
       </div>
-      <div className="text-muted-foreground text-[10px]">
-        {event.time}
-      </div>
+      {event.time && (
+        <div className="text-muted-foreground text-[10px]">
+          {event.time}
+        </div>
+      )}
     </button>
   )
 }

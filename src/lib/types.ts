@@ -5,7 +5,7 @@ export interface MarketingEvent {
   title: string
   solution: Solution
   date: string
-  time: string
+  time?: string
   location: string
   regPageUrl?: string
   vivaEngageUrl?: string

@@ -47,7 +47,9 @@ export function EventDetailModal({ event, open, onClose }: EventDetailModalProps
                   month: 'long', 
                   day: 'numeric' 
                 })}</div>
-                <div className="text-sm text-muted-foreground">{event.time}</div>
+                {event.time && (
+                  <div className="text-sm text-muted-foreground">{event.time}</div>
+                )}
               </div>
             </div>
             

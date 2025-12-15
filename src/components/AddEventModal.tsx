@@ -47,7 +47,7 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!title || !date || !time || !location) {
+    if (!title || !date || !location) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -56,7 +56,7 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
       title,
       solution,
       date,
-      time,
+      time: time || undefined,
       location,
       regPageUrl: regPageUrl || undefined,
       vivaEngageUrl: vivaEngageUrl || undefined,
@@ -120,13 +120,12 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="time">Time *</Label>
+              <Label htmlFor="time">Time</Label>
               <Input
                 id="time"
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                required
               />
             </div>
           </div>
