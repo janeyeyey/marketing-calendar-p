@@ -44,10 +44,10 @@
   --input: oklch(0.88 0.01 80);
   --ring: oklch(0.45 0.12 200);
   
-  --solution-ai: oklch(0.55 0.22 290);
-  --solution-cloud: oklch(0.60 0.18 220);
-  --solution-security: oklch(0.52 0.20 20);
-  --solution-csa: oklch(0.65 0.18 60);
+  --solution-ai: oklch(0.65 0.18 45);
+  --solution-cloud: oklch(0.60 0.15 155);
+  --solution-security: oklch(0.55 0.15 250);
+  --solution-csa: oklch(0.60 0.20 300);
   
   --radius: 0.5rem;
 }
