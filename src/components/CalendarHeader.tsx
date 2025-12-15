@@ -55,7 +55,7 @@ export function CalendarHeader({
         
         <Button
           onClick={onAddEvent}
-          className="bg-accent hover:bg-accent/90 text-accent-foreground"
+          className="bg-[oklch(0.75_0.15_85)] hover:bg-[oklch(0.65_0.15_85)] text-foreground font-semibold shadow-md"
         >
           <Plus size={20} weight="bold" />
           Add Event
