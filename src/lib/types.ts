@@ -5,6 +5,7 @@ export interface MarketingEvent {
   title: string
   solution: Solution
   date: string
+  endDate?: string
   time?: string
   location: string
   regPageUrl?: string

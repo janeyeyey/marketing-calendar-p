@@ -29,6 +29,7 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
   const [title, setTitle] = useState('')
   const [solution, setSolution] = useState<Solution>('AI Business Solutions')
   const [date, setDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [time, setTime] = useState('')
   const [location, setLocation] = useState('')
   const [regPageUrl, setRegPageUrl] = useState('')
@@ -38,6 +39,7 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
     setTitle('')
     setSolution('AI Business Solutions')
     setDate('')
+    setEndDate('')
     setTime('')
     setLocation('')
     setRegPageUrl('')
@@ -52,10 +54,16 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
       return
     }
     
+    if (endDate && endDate < date) {
+      toast.error('End date cannot be before start date')
+      return
+    }
+    
     onAdd({
       title,
       solution,
       date,
+      endDate: endDate || undefined,
       time: time || undefined,
       location,
       regPageUrl: regPageUrl || undefined,
@@ -109,7 +117,7 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="date">Date *</Label>
+              <Label htmlFor="date">Start Date *</Label>
               <Input
                 id="date"
                 type="date"
@@ -120,14 +128,25 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="time">Time</Label>
+              <Label htmlFor="endDate">End Date</Label>
               <Input
-                id="time"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={date}
               />
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="time">Time</Label>
+            <Input
+              id="time"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
           </div>
           
           <div className="space-y-2">

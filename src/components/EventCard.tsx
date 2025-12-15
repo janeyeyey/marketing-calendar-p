@@ -1,6 +1,7 @@
 import { MarketingEvent } from '@/lib/types'
 import { SOLUTION_COLORS } from '@/lib/constants'
-import { MapPin, Link } from '@phosphor-icons/react'
+import { MapPin, Link, CalendarBlank } from '@phosphor-icons/react'
+import { parseDateKST } from '@/lib/calendar-utils'
 
 interface EventCardProps {
   event: MarketingEvent
@@ -15,6 +16,19 @@ export function EventCard({ event, onClick }: EventCardProps) {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
   
+  const isMultiDay = event.endDate && event.endDate !== event.date
+  
+  const getDurationText = () => {
+    if (!isMultiDay) return null
+    
+    const startDate = parseDateKST(event.date)
+    const endDate = parseDateKST(event.endDate!)
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+    
+    return `${diffDays}일간`
+  }
+  
   return (
     <button
       onClick={onClick}
@@ -24,10 +38,18 @@ export function EventCard({ event, onClick }: EventCardProps) {
         backgroundColor: 'var(--card)'
       }}
     >
-      <div 
-        className="font-semibold text-foreground leading-tight mb-1 line-clamp-2 group-hover:text-primary transition-colors"
-      >
-        {event.title}
+      <div className="flex items-start justify-between gap-1 mb-1">
+        <div 
+          className="font-semibold text-foreground leading-tight line-clamp-2 group-hover:text-primary transition-colors flex-1"
+        >
+          {event.title}
+        </div>
+        {isMultiDay && (
+          <div className="flex items-center gap-0.5 text-[9px] bg-muted text-muted-foreground px-1 py-0.5 rounded shrink-0">
+            <CalendarBlank size={9} />
+            <span>{getDurationText()}</span>
+          </div>
+        )}
       </div>
       
       {event.location && (

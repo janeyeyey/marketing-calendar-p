@@ -31,6 +31,7 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
   const [title, setTitle] = useState('')
   const [solution, setSolution] = useState<Solution>('AI Business Solutions')
   const [date, setDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [time, setTime] = useState('')
   const [location, setLocation] = useState('')
   const [regPageUrl, setRegPageUrl] = useState('')
@@ -41,6 +42,7 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
       setTitle(event.title)
       setSolution(event.solution)
       setDate(event.date)
+      setEndDate(event.endDate || '')
       setTime(event.time || '')
       setLocation(event.location)
       setRegPageUrl(event.regPageUrl || '')
@@ -52,6 +54,7 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
     setTitle('')
     setSolution('AI Business Solutions')
     setDate('')
+    setEndDate('')
     setTime('')
     setLocation('')
     setRegPageUrl('')
@@ -66,11 +69,17 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
       return
     }
     
+    if (endDate && endDate < date) {
+      toast.error('End date cannot be before start date')
+      return
+    }
+    
     onEdit({
       id: event.id,
       title,
       solution,
       date,
+      endDate: endDate || undefined,
       time: time || undefined,
       location,
       regPageUrl: regPageUrl || undefined,
@@ -137,7 +146,7 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-date">Date *</Label>
+              <Label htmlFor="edit-date">Start Date *</Label>
               <Input
                 id="edit-date"
                 type="date"
@@ -148,14 +157,25 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="edit-time">Time</Label>
+              <Label htmlFor="edit-endDate">End Date</Label>
               <Input
-                id="edit-time"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
+                id="edit-endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={date}
               />
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="edit-time">Time</Label>
+            <Input
+              id="edit-time"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
           </div>
           
           <div className="space-y-2">

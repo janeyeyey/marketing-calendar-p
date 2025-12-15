@@ -1,6 +1,6 @@
 import { MarketingEvent } from '@/lib/types'
 import { SOLUTION_COLORS } from '@/lib/constants'
-import { formatDateDisplay } from '@/lib/calendar-utils'
+import { formatDateDisplay, parseDateKST } from '@/lib/calendar-utils'
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,31 @@ export function EventDetailModal({ event, open, onClose, onEdit }: EventDetailMo
   const handleEdit = () => {
     onEdit(event)
     onClose()
+  }
+  
+  const getDateRangeDisplay = () => {
+    if (!event.endDate || event.endDate === event.date) {
+      return formatDateDisplay(event.date)
+    }
+    
+    const startDate = parseDateKST(event.date)
+    const endDate = parseDateKST(event.endDate)
+    
+    const startDisplay = startDate.toLocaleDateString('ko-KR', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      timeZone: 'Asia/Seoul'
+    })
+    
+    const endDisplay = endDate.toLocaleDateString('ko-KR', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      timeZone: 'Asia/Seoul'
+    })
+    
+    return `${startDisplay} - ${endDisplay}`
   }
   
   return (
@@ -59,7 +84,7 @@ export function EventDetailModal({ event, open, onClose, onEdit }: EventDetailMo
             <div className="flex items-start gap-3">
               <Calendar className="mt-0.5 text-muted-foreground flex-shrink-0" size={20} />
               <div>
-                <div className="font-medium">{formatDateDisplay(event.date)}</div>
+                <div className="font-medium">{getDateRangeDisplay()}</div>
                 {event.time && (
                   <div className="text-sm text-muted-foreground">{event.time}</div>
                 )}

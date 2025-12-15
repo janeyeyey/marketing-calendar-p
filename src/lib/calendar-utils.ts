@@ -48,7 +48,26 @@ export function parseDateKST(dateStr: string): Date {
 
 export function getEventsForDay(events: MarketingEvent[], date: Date): MarketingEvent[] {
   const dateStr = formatDate(date)
-  return events.filter(event => event.date === dateStr)
+  return events.filter(event => {
+    const eventStartDate = parseDateKST(event.date)
+    const eventEndDate = event.endDate ? parseDateKST(event.endDate) : eventStartDate
+    
+    return date >= eventStartDate && date <= eventEndDate
+  })
+}
+
+export function isEventStartDay(event: MarketingEvent, date: Date): boolean {
+  const eventStartDate = parseDateKST(event.date)
+  return isSameDay(date, eventStartDate)
+}
+
+export function isEventEndDay(event: MarketingEvent, date: Date): boolean {
+  const eventEndDate = event.endDate ? parseDateKST(event.endDate) : parseDateKST(event.date)
+  return isSameDay(date, eventEndDate)
+}
+
+export function isEventContinuation(event: MarketingEvent, date: Date): boolean {
+  return !isEventStartDay(event, date) && !isEventEndDay(event, date)
 }
 
 export function isCurrentMonth(date: Date, currentMonth: number): boolean {

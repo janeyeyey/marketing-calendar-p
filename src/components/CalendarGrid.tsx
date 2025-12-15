@@ -1,6 +1,6 @@
 import { MarketingEvent } from '@/lib/types'
 import { DAYS_OF_WEEK } from '@/lib/constants'
-import { getMonthDays, getEventsForDay, isCurrentMonth } from '@/lib/calendar-utils'
+import { getMonthDays, getEventsForDay, isCurrentMonth, isEventStartDay } from '@/lib/calendar-utils'
 import { EventCard } from './EventCard'
 import { cn } from '@/lib/utils'
 
@@ -42,8 +42,9 @@ export function CalendarGrid({ year, month, events, onEventClick }: CalendarGrid
           <div key={weekIdx} className="grid grid-cols-7 divide-x divide-border">
             {week.map((day, dayIdx) => {
               const dayEvents = getEventsForDay(events, day)
+              const eventsToShow = dayEvents.filter(event => isEventStartDay(event, day))
               const isCurrentMonthDay = isCurrentMonth(day, month)
-              const minHeight = Math.max(dayEvents.length * 60 + 40, 100)
+              const minHeight = Math.max(eventsToShow.length * 60 + 40, 100)
               
               return (
                 <div
@@ -64,7 +65,7 @@ export function CalendarGrid({ year, month, events, onEventClick }: CalendarGrid
                   </div>
                   
                   <div className="space-y-1">
-                    {dayEvents.map((event) => (
+                    {eventsToShow.map((event) => (
                       <EventCard
                         key={event.id}
                         event={event}
