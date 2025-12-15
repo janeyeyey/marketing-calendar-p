@@ -6,9 +6,10 @@ import { parseDateKST } from '@/lib/calendar-utils'
 interface EventCardProps {
   event: MarketingEvent
   onClick: () => void
+  onDragStart?: (event: MarketingEvent) => void
 }
 
-export function EventCard({ event, onClick }: EventCardProps) {
+export function EventCard({ event, onClick, onDragStart }: EventCardProps) {
   const solutionColor = SOLUTION_COLORS[event.solution]
   
   const handleLinkClick = (e: React.MouseEvent, url: string) => {
@@ -29,10 +30,29 @@ export function EventCard({ event, onClick }: EventCardProps) {
     return `${diffDays}일간`
   }
   
+  const handleDragStart = (e: React.DragEvent) => {
+    e.stopPropagation()
+    if (onDragStart) {
+      onDragStart(event)
+      const target = e.currentTarget as HTMLElement
+      target.style.opacity = '0.5'
+    }
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', event.id)
+  }
+  
+  const handleDragEnd = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement
+    target.style.opacity = '1'
+  }
+  
   return (
     <button
       onClick={onClick}
-      className="w-full text-left p-2 rounded text-xs transition-all hover:scale-[1.02] hover:shadow-md group"
+      draggable={!!onDragStart}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      className="w-full text-left p-2 rounded text-xs transition-all hover:scale-[1.02] hover:shadow-md group cursor-move active:cursor-grabbing"
       style={{
         borderLeft: `3px solid ${solutionColor}`,
         backgroundColor: 'var(--card)'

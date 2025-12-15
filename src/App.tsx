@@ -7,6 +7,7 @@ import { EventDetailModal } from './components/EventDetailModal'
 import { AddEventModal } from './components/AddEventModal'
 import { EditEventModal } from './components/EditEventModal'
 import { Toaster } from './components/ui/sonner'
+import { toast } from 'sonner'
 
 function App() {
   const [events, setEvents] = useKV<MarketingEvent[]>('marketing-events', [])
@@ -92,6 +93,56 @@ function App() {
     )
   }
   
+  const handleEventDrop = (eventId: string, newDate: string) => {
+    const event = allEvents.find(e => e.id === eventId)
+    
+    setEvents(current => {
+      const events = current || []
+      const event = events.find(e => e.id === eventId)
+      
+      if (!event) return events
+      
+      const oldStartDate = event.date
+      const oldEndDate = event.endDate
+      
+      if (oldEndDate && oldEndDate !== oldStartDate) {
+        const startDate = new Date(oldStartDate)
+        const endDate = new Date(oldEndDate)
+        const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        const newStartDate = new Date(newDate)
+        const newEndDate = new Date(newStartDate)
+        newEndDate.setDate(newEndDate.getDate() + duration)
+        
+        const year = newEndDate.getFullYear()
+        const month = String(newEndDate.getMonth() + 1).padStart(2, '0')
+        const day = String(newEndDate.getDate()).padStart(2, '0')
+        const newEndDateStr = `${year}-${month}-${day}`
+        
+        return events.map(e => 
+          e.id === eventId 
+            ? { ...e, date: newDate, endDate: newEndDateStr }
+            : e
+        )
+      }
+      
+      return events.map(e => 
+        e.id === eventId 
+          ? { ...e, date: newDate }
+          : e
+      )
+    })
+    
+    if (event) {
+      const formattedDate = new Date(newDate).toLocaleDateString('ko-KR', {
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Seoul'
+      })
+      toast.success(`"${event.title}" 이벤트가 ${formattedDate}로 이동되었습니다`)
+    }
+  }
+  
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-[1600px] mx-auto space-y-6">
@@ -110,6 +161,7 @@ function App() {
           month={currentMonth}
           events={filteredEvents}
           onEventClick={handleEventClick}
+          onEventDrop={handleEventDrop}
         />
       </div>
       
