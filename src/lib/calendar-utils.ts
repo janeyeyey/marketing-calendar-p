@@ -35,7 +35,15 @@ export function isSameDay(date1: Date, date2: Date): boolean {
 }
 
 export function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0]
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+export function parseDateKST(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
 }
 
 export function getEventsForDay(events: MarketingEvent[], date: Date): MarketingEvent[] {
@@ -45,4 +53,15 @@ export function getEventsForDay(events: MarketingEvent[], date: Date): Marketing
 
 export function isCurrentMonth(date: Date, currentMonth: number): boolean {
   return date.getMonth() === currentMonth
+}
+
+export function formatDateDisplay(dateStr: string): string {
+  const date = parseDateKST(dateStr)
+  return date.toLocaleDateString('ko-KR', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    timeZone: 'Asia/Seoul'
+  })
 }

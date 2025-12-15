@@ -1,6 +1,6 @@
 # Planning Guide
 
-A monthly marketing calendar application that allows teams to view, manage, and filter marketing events across four solution categories with an adjustable grid layout that accommodates multiple events per day.
+A monthly marketing calendar application that allows teams to view, manage, and filter marketing events across four solution categories with an adjustable grid layout that accommodates multiple events per day. All dates and times are handled in Korea Standard Time (KST, UTC+9) to ensure accurate display for the target user base.
 
 **Experience Qualities**: 
 1. **Organized** - Clear visual hierarchy with color-coded solutions and a clean calendar grid that makes it easy to scan events at a glance
@@ -55,6 +55,7 @@ The app manages event data with CRUD operations, filtering, and modal interactio
 **Invalid URLs** - Validate URL format in form, gracefully handle missing links in detail view
 **No Events in Month** - Display friendly empty state message encouraging users to add events
 **Multiple Solutions Selected** - Show events that match any selected solution (OR logic)
+**Timezone Handling** - All dates stored and displayed in Korea Standard Time (KST) to prevent date offset issues when selecting dates
 
 ## Design Direction
 
