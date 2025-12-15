@@ -2,6 +2,7 @@ import { MarketingEvent } from '@/lib/types'
 import { DAYS_OF_WEEK } from '@/lib/constants'
 import { getMonthDays, getEventsForDay, isCurrentMonth, isEventStartDay } from '@/lib/calendar-utils'
 import { EventCard } from './EventCard'
+import { EventContinuation } from './EventContinuation'
 import { cn } from '@/lib/utils'
 
 interface CalendarGridProps {
@@ -42,9 +43,11 @@ export function CalendarGrid({ year, month, events, onEventClick }: CalendarGrid
           <div key={weekIdx} className="grid grid-cols-7 divide-x divide-border">
             {week.map((day, dayIdx) => {
               const dayEvents = getEventsForDay(events, day)
-              const eventsToShow = dayEvents.filter(event => isEventStartDay(event, day))
+              const startingEvents = dayEvents.filter(event => isEventStartDay(event, day))
+              const continuingEvents = dayEvents.filter(event => !isEventStartDay(event, day))
               const isCurrentMonthDay = isCurrentMonth(day, month)
-              const minHeight = Math.max(eventsToShow.length * 60 + 40, 100)
+              const totalEvents = startingEvents.length + continuingEvents.length
+              const minHeight = Math.max(totalEvents * 60 + 40, 100)
               
               return (
                 <div
@@ -65,9 +68,17 @@ export function CalendarGrid({ year, month, events, onEventClick }: CalendarGrid
                   </div>
                   
                   <div className="space-y-1">
-                    {eventsToShow.map((event) => (
+                    {startingEvents.map((event) => (
                       <EventCard
                         key={event.id}
+                        event={event}
+                        onClick={() => onEventClick(event)}
+                      />
+                    ))}
+                    
+                    {continuingEvents.map((event) => (
+                      <EventContinuation
+                        key={`continuation-${event.id}`}
                         event={event}
                         onClick={() => onEventClick(event)}
                       />
