@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { MarketingEvent, Solution } from '@/lib/types'
-import { SOLUTIONS } from '@/lib/constants'
+import { SOLUTIONS, LOCATION_OPTIONS } from '@/lib/constants'
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,8 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
   const [date, setDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [time, setTime] = useState('')
-  const [location, setLocation] = useState('')
+  const [locationOption, setLocationOption] = useState<string>('마이크로소프트 13층')
+  const [customLocation, setCustomLocation] = useState('')
   const [regPageUrl, setRegPageUrl] = useState('')
   const [vivaEngageUrl, setVivaEngageUrl] = useState('')
   
@@ -41,7 +42,8 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
     setDate('')
     setEndDate('')
     setTime('')
-    setLocation('')
+    setLocationOption('마이크로소프트 13층')
+    setCustomLocation('')
     setRegPageUrl('')
     setVivaEngageUrl('')
   }
@@ -49,7 +51,9 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!title || !date || !location) {
+    const finalLocation = locationOption === 'custom' ? customLocation : locationOption
+    
+    if (!title || !date || !finalLocation) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -65,7 +69,7 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
       date,
       endDate: endDate || undefined,
       time: time || undefined,
-      location,
+      location: finalLocation,
       regPageUrl: regPageUrl || undefined,
       vivaEngageUrl: vivaEngageUrl || undefined,
     })
@@ -151,13 +155,30 @@ export function AddEventModal({ open, onClose, onAdd }: AddEventModalProps) {
           
           <div className="space-y-2">
             <Label htmlFor="location">Location *</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter event location"
-              required
-            />
+            <Select value={locationOption} onValueChange={setLocationOption}>
+              <SelectTrigger id="location">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LOCATION_OPTIONS.filter(opt => opt !== 'custom').map((loc) => (
+                  <SelectItem key={loc} value={loc}>
+                    {loc}
+                  </SelectItem>
+                ))}
+                <SelectItem value="custom">직접 입력</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {locationOption === 'custom' && (
+              <Input
+                id="custom-location"
+                value={customLocation}
+                onChange={(e) => setCustomLocation(e.target.value)}
+                placeholder="Enter custom location"
+                className="mt-2"
+                required
+              />
+            )}
           </div>
           
           <div className="space-y-2">

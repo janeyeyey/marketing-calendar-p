@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MarketingEvent, Solution } from '@/lib/types'
-import { SOLUTIONS } from '@/lib/constants'
+import { SOLUTIONS, LOCATION_OPTIONS } from '@/lib/constants'
 import {
   Dialog,
   DialogContent,
@@ -33,7 +33,8 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
   const [date, setDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [time, setTime] = useState('')
-  const [location, setLocation] = useState('')
+  const [locationOption, setLocationOption] = useState<string>('마이크로소프트 13층')
+  const [customLocation, setCustomLocation] = useState('')
   const [regPageUrl, setRegPageUrl] = useState('')
   const [vivaEngageUrl, setVivaEngageUrl] = useState('')
   
@@ -44,7 +45,16 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
       setDate(event.date)
       setEndDate(event.endDate || '')
       setTime(event.time || '')
-      setLocation(event.location)
+      
+      const presetLocation = LOCATION_OPTIONS.filter(opt => opt !== 'custom').find(opt => opt === event.location)
+      if (presetLocation) {
+        setLocationOption(presetLocation)
+        setCustomLocation('')
+      } else {
+        setLocationOption('custom')
+        setCustomLocation(event.location)
+      }
+      
       setRegPageUrl(event.regPageUrl || '')
       setVivaEngageUrl(event.vivaEngageUrl || '')
     }
@@ -56,7 +66,8 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
     setDate('')
     setEndDate('')
     setTime('')
-    setLocation('')
+    setLocationOption('마이크로소프트 13층')
+    setCustomLocation('')
     setRegPageUrl('')
     setVivaEngageUrl('')
   }
@@ -64,7 +75,9 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!event || !title || !date || !location) {
+    const finalLocation = locationOption === 'custom' ? customLocation : locationOption
+    
+    if (!event || !title || !date || !finalLocation) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -81,7 +94,7 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
       date,
       endDate: endDate || undefined,
       time: time || undefined,
-      location,
+      location: finalLocation,
       regPageUrl: regPageUrl || undefined,
       vivaEngageUrl: vivaEngageUrl || undefined,
     })
@@ -180,13 +193,30 @@ export function EditEventModal({ event, open, onClose, onEdit, onDelete }: EditE
           
           <div className="space-y-2">
             <Label htmlFor="edit-location">Location *</Label>
-            <Input
-              id="edit-location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter event location"
-              required
-            />
+            <Select value={locationOption} onValueChange={setLocationOption}>
+              <SelectTrigger id="edit-location">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LOCATION_OPTIONS.filter(opt => opt !== 'custom').map((loc) => (
+                  <SelectItem key={loc} value={loc}>
+                    {loc}
+                  </SelectItem>
+                ))}
+                <SelectItem value="custom">직접 입력</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {locationOption === 'custom' && (
+              <Input
+                id="edit-custom-location"
+                value={customLocation}
+                onChange={(e) => setCustomLocation(e.target.value)}
+                placeholder="Enter custom location"
+                className="mt-2"
+                required
+              />
+            )}
           </div>
           
           <div className="space-y-2">

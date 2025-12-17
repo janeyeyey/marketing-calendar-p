@@ -22,3 +22,11 @@ export const SOLUTION_COLOR_CLASSES: Record<Solution, string> = {
 }
 
 export const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+export const LOCATION_OPTIONS = [
+  '마이크로소프트 13층',
+  'Digital(한국어)',
+  'Digital(영어, KUDO통역)',
+  'Digital(영어, 한국어 자막)',
+  'custom'
+] as const
