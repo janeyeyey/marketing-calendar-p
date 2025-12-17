@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { MarketingEvent, Solution } from './lib/types'
 import { CalendarHeader } from './components/CalendarHeader'
 import { CalendarGrid } from './components/CalendarGrid'
@@ -9,24 +10,11 @@ import { Toaster } from './components/ui/sonner'
 import { toast } from 'sonner'
 
 function App() {
-  // ✅ Pages(view-only)에서는 편집 기능 숨김
+  // Spark/Preview에서는 production이 아닐 가능성이 높지만, 혹시 몰라 가드
   const isEditable = import.meta.env.MODE !== 'production'
 
-  // ✅ Spark(useKV) 대신: repo의 public/events.json을 읽어서 state로 관리
-  const [events, setEvents] = useState<MarketingEvent[]>([])
-
-  useEffect(() => {
-    fetch(import.meta.env.BASE_URL + 'events.json')
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load events.json: ${res.status}`)
-        return res.json()
-      })
-      .then((data: MarketingEvent[]) => setEvents(Array.isArray(data) ? data : []))
-      .catch((err) => {
-        console.error(err)
-        setEvents([])
-      })
-  }, [])
+  // ✅ Spark KV 저장소 (네가 저장해둔 이벤트들이 여기 있음)
+  const [events, setEvents] = useKV<MarketingEvent[]>('marketing-events', [])
 
   const today = new Date()
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
@@ -39,7 +27,7 @@ function App() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [eventToEdit, setEventToEdit] = useState<MarketingEvent | null>(null)
 
-  const allEvents = events
+  const allEvents = events || []
 
   const filteredEvents = useMemo(() => {
     if (selectedSolutions.length === 0) return allEvents
@@ -49,18 +37,18 @@ function App() {
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11)
-      setCurrentYear(currentYear - 1)
+      setCurrentYear((y) => y - 1)
     } else {
-      setCurrentMonth(currentMonth - 1)
+      setCurrentMonth((m) => m - 1)
     }
   }
 
   const handleNextMonth = () => {
     if (currentMonth === 11) {
       setCurrentMonth(0)
-      setCurrentYear(currentYear + 1)
+      setCurrentYear((y) => y + 1)
     } else {
-      setCurrentMonth(currentMonth + 1)
+      setCurrentMonth((m) => m + 1)
     }
   }
 
@@ -71,7 +59,6 @@ function App() {
     })
   }
 
-  // ⚠️ view-only에서는 UI를 숨겨서 호출 자체가 거의 없지만, 안전하게 가드
   const handleAddEvent = (eventData: Omit<MarketingEvent, 'id'>) => {
     if (!isEditable) return
 
@@ -80,7 +67,7 @@ function App() {
       id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     }
 
-    setEvents((current) => [...current, newEvent])
+    setEvents((current) => [...(current || []), newEvent])
   }
 
   const handleEventClick = (event: MarketingEvent) => {
@@ -96,12 +83,12 @@ function App() {
 
   const handleUpdateEvent = (updatedEvent: MarketingEvent) => {
     if (!isEditable) return
-    setEvents((current) => current.map((event) => (event.id === updatedEvent.id ? updatedEvent : event)))
+    setEvents((current) => (current || []).map((e) => (e.id === updatedEvent.id ? updatedEvent : e)))
   }
 
   const handleDeleteEvent = (eventId: string) => {
     if (!isEditable) return
-    setEvents((current) => current.filter((event) => event.id !== eventId))
+    setEvents((current) => (current || []).filter((e) => e.id !== eventId))
   }
 
   const handleEventDrop = (eventId: string, newDate: string) => {
@@ -110,8 +97,9 @@ function App() {
     const eventForToast = allEvents.find((e) => e.id === eventId)
 
     setEvents((current) => {
-      const event = current.find((e) => e.id === eventId)
-      if (!event) return current
+      const list = current || []
+      const event = list.find((e) => e.id === eventId)
+      if (!event) return list
 
       const oldStartDate = event.date
       const oldEndDate = event.endDate
@@ -131,10 +119,10 @@ function App() {
         const day = String(newEndDate.getDate()).padStart(2, '0')
         const newEndDateStr = `${year}-${month}-${day}`
 
-        return current.map((e) => (e.id === eventId ? { ...e, date: newDate, endDate: newEndDateStr } : e))
+        return list.map((e) => (e.id === eventId ? { ...e, date: newDate, endDate: newEndDateStr } : e))
       }
 
-      return current.map((e) => (e.id === eventId ? { ...e, date: newDate } : e))
+      return list.map((e) => (e.id === eventId ? { ...e, date: newDate } : e))
     })
 
     if (eventForToast) {
@@ -147,28 +135,63 @@ function App() {
     }
   }
 
+  // ✅ “연동처럼” 만들기: events.json을 클립보드에 복사 + GitHub 편집 페이지 열기
+  const publishToPages = async () => {
+    if (!isEditable) return
+
+    const json = JSON.stringify(allEvents, null, 2)
+
+    try {
+      await navigator.clipboard.writeText(json)
+      toast.success('events.json이 클립보드에 복사됐어요. GitHub에서 붙여넣고 Commit 해주세요.')
+
+      window.open(
+        'https://github.com/janeyeyey/marketing-calendar-p/edit/main/public/events.json',
+        '_blank'
+      )
+    } catch (e) {
+      console.error(e)
+      toast.error('클립보드 복사에 실패했어요. 브라우저 권한을 확인해 주세요.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        <CalendarHeader
-          year={currentYear}
-          month={currentMonth}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
-          selectedSolutions={selectedSolutions}
-          onToggleSolution={handleToggleSolution}
-          onAddEvent={() => {
-            if (isEditable) setIsAddModalOpen(true)
-          }}
-        />
+      <div className="max-w-[1600px] mx-auto space-y-4">
+        {/* ✅ 편집자용 Publish 버튼 */}
+        {isEditable && (
+          <div className="flex justify-end">
+            <button
+              onClick={publishToPages}
+              className="px-3 py-2 rounded-md border text-sm hover:bg-muted"
+              type="button"
+            >
+              Publish to View-only (copy + open GitHub)
+            </button>
+          </div>
+        )}
 
-        <CalendarGrid
-          year={currentYear}
-          month={currentMonth}
-          events={filteredEvents}
-          onEventClick={handleEventClick}
-          onEventDrop={handleEventDrop}
-        />
+        <div className="space-y-6">
+          <CalendarHeader
+            year={currentYear}
+            month={currentMonth}
+            onPrevMonth={handlePrevMonth}
+            onNextMonth={handleNextMonth}
+            selectedSolutions={selectedSolutions}
+            onToggleSolution={handleToggleSolution}
+            onAddEvent={() => {
+              if (isEditable) setIsAddModalOpen(true)
+            }}
+          />
+
+          <CalendarGrid
+            year={currentYear}
+            month={currentMonth}
+            events={filteredEvents}
+            onEventClick={handleEventClick}
+            onEventDrop={handleEventDrop}
+          />
+        </div>
       </div>
 
       <EventDetailModal
@@ -182,11 +205,7 @@ function App() {
       />
 
       {isEditable && (
-        <AddEventModal
-          open={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-          onAdd={handleAddEvent}
-        />
+        <AddEventModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onAdd={handleAddEvent} />
       )}
 
       {isEditable && (
