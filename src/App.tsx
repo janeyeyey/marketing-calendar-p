@@ -11,7 +11,7 @@ import { toast } from 'sonner'
 
 function App() {
   // Spark/Preview에서는 production이 아닐 가능성이 높지만, 혹시 몰라 가드
-  const isEditable = import.meta.env.MODE !== 'production'
+  const isEditable = typeof window !== 'undefined' && 'spark' in window
 
   // ✅ Spark KV 저장소 (네가 저장해둔 이벤트들이 여기 있음)
   const [events, setEvents] = useKV<MarketingEvent[]>('marketing-events', [])
