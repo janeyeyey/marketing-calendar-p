@@ -1,121 +1,13 @@
-import { useState, useMemo, useEffect } from 'react'
-import { MarketingEvent, Solution } from './lib/types'
-import { CalendarHeader } from './components/CalendarHeader'
-import { CalendarGrid } from './components/CalendarGrid'
-import { EventDetailModal } from './components/EventDetailModal'
-import { Toaster } from './components/ui/sonner'
+import { Routes, Route, Navigate } from "react-router-dom";
+import ViewOnlyApp from "./app/ViewOnlyApp";
+import AdminApp from "./app/AdminApp";
 
-function App() {
-  // ✅ main (GitHub Pages) = 무조건 view-only
-  const isEditable = false
-
-  // ✅ repo의 public/events.json을 읽어서 state로 관리
-  const [events, setEvents] = useState<MarketingEvent[]>([])
-
-  useEffect(() => {
-    fetch(import.meta.env.BASE_URL + 'events.json')
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load events.json: ${res.status}`)
-        return res.json()
-      })
-      .then((data: unknown) => {
-        setEvents(Array.isArray(data) ? (data as MarketingEvent[]) : [])
-      })
-      .catch((err) => {
-        console.error(err)
-        setEvents([])
-      })
-  }, [])
-
-  const today = new Date()
-  const [currentYear, setCurrentYear] = useState(today.getFullYear())
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth())
-
-  const [selectedSolutions, setSelectedSolutions] = useState<Solution[]>([])
-  const [selectedEvent, setSelectedEvent] = useState<MarketingEvent | null>(null)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-
-  const allEvents = events
-
-  const filteredEvents = useMemo(() => {
-    if (selectedSolutions.length === 0) return allEvents
-    return allEvents.filter((event) => selectedSolutions.includes(event.solution))
-  }, [allEvents, selectedSolutions])
-
-  const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11)
-      setCurrentYear((y) => y - 1)
-    } else {
-      setCurrentMonth((m) => m - 1)
-    }
-  }
-
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0)
-      setCurrentYear((y) => y + 1)
-    } else {
-      setCurrentMonth((m) => m + 1)
-    }
-  }
-
-  const handleToggleSolution = (solution: Solution) => {
-    setSelectedSolutions((current) => {
-      if (current.includes(solution)) return current.filter((s) => s !== solution)
-      return [...current, solution]
-    })
-  }
-
-  const handleEventClick = (event: MarketingEvent) => {
-    setSelectedEvent(event)
-    setIsDetailModalOpen(true)
-  }
-
-  // ✅ view-only: 드래그 드롭 막기 (CalendarGrid가 드롭을 호출해도 무시)
-  const handleEventDrop = () => {
-    /* no-op */
-  }
-
+export default function App() {
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        <CalendarHeader
-          year={currentYear}
-          month={currentMonth}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
-          selectedSolutions={selectedSolutions}
-          onToggleSolution={handleToggleSolution}
-          // ✅ view-only에서는 Add 버튼이 있어도 눌러도 아무 일 없게
-          onAddEvent={() => {}}
-        />
-
-        <CalendarGrid
-          year={currentYear}
-          month={currentMonth}
-          events={filteredEvents}
-          onEventClick={handleEventClick}
-          onEventDrop={handleEventDrop}
-        />
-      </div>
-
-      <EventDetailModal
-        event={selectedEvent}
-        open={isDetailModalOpen}
-        onClose={() => {
-          setIsDetailModalOpen(false)
-          setSelectedEvent(null)
-        }}
-        // ✅ view-only: Edit 버튼(연필) 눌러도 아무 동작 안 하게
-        onEdit={() => {
-          if (!isEditable) return
-        }}
-      />
-
-      <Toaster />
-    </div>
-  )
+    <Routes>
+      <Route path="/" element={<ViewOnlyApp />} />
+      <Route path="/admin" element={<AdminApp />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
-
-export default App
