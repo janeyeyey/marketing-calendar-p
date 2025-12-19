@@ -123,4 +123,98 @@ export default function AdminApp() {
 
   // ===== CRUD (로컬 상태만) =====
   const addEvent = (eventWithoutId: Omit<MarketingEvent, "id">) => {
-    const newEvent: MarketingEvent = { id: makeId(), .
+    const newEvent: MarketingEvent = { id: makeId(), ...eventWithoutId };
+    setEvents((prev) => [...prev, newEvent]);
+  };
+
+  const editEvent = (updated: MarketingEvent) => {
+    setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+    setSelectedEvent(updated);
+  };
+
+  const deleteEvent = (eventId: string) => {
+    setEvents((prev) => prev.filter((e) => e.id !== eventId));
+    setIsEditOpen(false);
+    setIsDetailModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  return (
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        <CalendarHeader
+          year={currentYear}
+          month={currentMonth}
+          onPrevMonth={handlePrevMonth}
+          onNextMonth={handleNextMonth}
+          selectedSolutions={selectedSolutions}
+          onToggleSolution={handleToggleSolution}
+          onAddEvent={() => setIsAddOpen(true)}
+        />
+
+        {/* Admin 전용 버튼 */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <button
+            type="button"
+            className="px-3 py-2 rounded-md border bg-background hover:opacity-90"
+            onClick={handleExport}
+          >
+            Export events.json (copy + download)
+          </button>
+
+          <button
+            type="button"
+            className="px-3 py-2 rounded-md border bg-background hover:opacity-90"
+            onClick={openGitHubEditor}
+          >
+            Open GitHub events.json editor
+          </button>
+
+          {loadError && (
+            <div className="text-sm opacity-80">
+              events.json 로드 실패로 빈 목록에서 시작: {loadError}
+            </div>
+          )}
+        </div>
+
+        <CalendarGrid
+          year={currentYear}
+          month={currentMonth}
+          events={filteredEvents}
+          onEventClick={handleEventClick}
+          onEventDrop={handleEventDrop}
+        />
+      </div>
+
+      <EventDetailModal
+        event={selectedEvent}
+        open={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        onEdit={() => {
+          if (!selectedEvent) return;
+          setIsEditOpen(true);
+        }}
+      />
+
+      {/* Add / Edit 모달 - 네 props 시그니처에 정확히 맞춤 */}
+      <AddEventModal
+        open={isAddOpen}
+        onClose={() => setIsAddOpen(false)}
+        onAdd={(ev) => addEvent(ev)}
+      />
+
+      <EditEventModal
+        open={isEditOpen}
+        event={selectedEvent}
+        onClose={() => setIsEditOpen(false)}
+        onEdit={(ev) => editEvent(ev)}
+        onDelete={(id) => deleteEvent(id)}
+      />
+
+      <Toaster />
+    </div>
+  );
+}
