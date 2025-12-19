@@ -10,7 +10,12 @@ import { Toaster } from './components/ui/sonner'
 import { toast } from 'sonner'
 
 function App() {
-  const isEditable = typeof window !== 'undefined' && window.location.hostname !== 'janeyeyey.github.io'
+  const isEditable =
+  typeof window !== 'undefined' &&
+  (
+    window.location.hostname.endsWith('.github.app') ||   // Spark 편집 페이지
+    !window.location.hostname.includes('github.io')        // 로컬 등
+  )
 
   // ✅ Spark KV 저장소 (네가 저장해둔 이벤트들이 여기 있음)
   const [events, setEvents] = useKV<MarketingEvent[]>('marketing-events', [])
