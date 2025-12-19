@@ -5,14 +5,13 @@ import { CalendarGrid } from "../components/CalendarGrid";
 import { EventDetailModal } from "../components/EventDetailModal";
 import { Toaster } from "../components/ui/sonner";
 
-// ✅ 네 프로젝트에 실제로 있는 모달 컴포넌트명에 맞춰 import 수정
 import { AddEventModal } from "../components/AddEventModal";
 import { EditEventModal } from "../components/EditEventModal";
 
 const GITHUB_EDIT_URL =
   "https://github.com/janeyeyey/marketing-calendar-p/edit/main/public/events.json";
 
-function safeDownloadJson(filename: string, text: string) {
+function downloadJson(filename: string, text: string) {
   const blob = new Blob([text], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -24,13 +23,18 @@ function safeDownloadJson(filename: string, text: string) {
   URL.revokeObjectURL(url);
 }
 
-export default function AdminApp() {
-  const isEditable = true;
+// 간단한 id 생성 (DB 없으니 충돌만 안 나면 됨)
+function makeId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `ev_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
 
+export default function AdminApp() {
   const [events, setEvents] = useState<MarketingEvent[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // view-only와 동일하게 공개 데이터로 시작
   useEffect(() => {
     fetch(import.meta.env.BASE_URL + "events.json")
       .then((res) => {
@@ -94,7 +98,7 @@ export default function AdminApp() {
     setIsDetailModalOpen(true);
   };
 
-  // 드래그는 안 한다고 했으니 no-op 유지 (혹시 CalendarGrid가 호출해도 무시)
+  // 드래그 안 함: CalendarGrid가 호출해도 무시
   const handleEventDrop = () => {
     /* no-op */
   };
@@ -102,120 +106,21 @@ export default function AdminApp() {
   const handleExport = async () => {
     const json = JSON.stringify(events, null, 2);
 
-    // 1) 클립보드
+    // 1) clipboard
     try {
       await navigator.clipboard.writeText(json);
     } catch {
       // ignore
     }
 
-    // 2) 다운로드도 같이 제공 (클립보드 권한 실패 대비)
-    safeDownloadJson("events.json", json);
+    // 2) download (권한 실패 대비)
+    downloadJson("events.json", json);
   };
 
   const openGitHubEditor = () => {
     window.open(GITHUB_EDIT_URL, "_blank", "noopener,noreferrer");
   };
 
-  // ====== CRUD (로컬 상태만) ======
-  const handleAddEvent = (newEvent: MarketingEvent) => {
-    setEvents((prev) => [...prev, newEvent]);
-  };
-
-  const handleUpdateEvent = (updated: MarketingEvent) => {
-    setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
-  };
-
-  const handleDeleteEvent = (id: string) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-    setIsDetailModalOpen(false);
-    setSelectedEvent(null);
-    setIsEditOpen(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        {/* 상단: 기존 헤더 재사용 + Add 버튼 활성 */}
-        <CalendarHeader
-          year={currentYear}
-          month={currentMonth}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
-          selectedSolutions={selectedSolutions}
-          onToggleSolution={handleToggleSolution}
-          onAddEvent={() => setIsAddOpen(true)}
-        />
-
-        {/* admin 전용 버튼 영역 */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="px-3 py-2 rounded-md border bg-background hover:opacity-90"
-            onClick={handleExport}
-          >
-            Export events.json (copy + download)
-          </button>
-
-          <button
-            type="button"
-            className="px-3 py-2 rounded-md border bg-background hover:opacity-90"
-            onClick={openGitHubEditor}
-          >
-            Open GitHub events.json editor
-          </button>
-
-          {loadError && (
-            <div className="text-sm opacity-80">
-              events.json 로드 실패로 빈 목록에서 시작함: {loadError}
-            </div>
-          )}
-        </div>
-
-        <CalendarGrid
-          year={currentYear}
-          month={currentMonth}
-          events={filteredEvents}
-          onEventClick={handleEventClick}
-          onEventDrop={handleEventDrop}
-        />
-      </div>
-
-      <EventDetailModal
-        event={selectedEvent}
-        open={isDetailModalOpen}
-        onClose={() => {
-          setIsDetailModalOpen(false);
-          setSelectedEvent(null);
-        }}
-        onEdit={() => {
-          if (!isEditable || !selectedEvent) return;
-          setIsEditOpen(true);
-        }}
-      />
-
-      {/* Add / Edit 모달 */}
-      <AddEventModal
-        open={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-        onCreate={(ev: MarketingEvent) => {
-          handleAddEvent(ev);
-          setIsAddOpen(false);
-        }}
-      />
-
-      <EditEventModal
-        open={isEditOpen}
-        event={selectedEvent}
-        onClose={() => setIsEditOpen(false)}
-        onSave={(ev: MarketingEvent) => {
-          handleUpdateEvent(ev);
-          setIsEditOpen(false);
-        }}
-        onDelete={(id: string) => handleDeleteEvent(id)}
-      />
-
-      <Toaster />
-    </div>
-  );
-}
+  // ===== CRUD (로컬 상태만) =====
+  const addEvent = (eventWithoutId: Omit<MarketingEvent, "id">) => {
+    const newEvent: MarketingEvent = { id: makeId(), .
