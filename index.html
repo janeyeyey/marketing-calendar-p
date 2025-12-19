@@ -13,6 +13,17 @@
 
 <body>
     <div id="root"></div>
+    
+    <script>
+  (function () {
+    const redirect = sessionStorage.redirect;
+    delete sessionStorage.redirect;
+    if (redirect && redirect !== location.href) {
+      history.replaceState(null, "", redirect.replace(location.origin, ""));
+    }
+  })();
+</script>
+
     <script type="module" src="/src/main.tsx"></script>
 </body>
 
